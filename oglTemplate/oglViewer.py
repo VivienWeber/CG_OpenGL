@@ -42,30 +42,28 @@ class Scene:
     """
 
     def __init__(self, width, height, scenetitle="Hello Triangle"):
-        self.scenetitle         = scenetitle
-        self.width              = width     # Breite des Fensters
-        self.height             = height    # Höhe des Fensters
-        self.angle              = 0         # Winkel der Rotation
-        self.angle_increment    = 1         # Inkrement für die Rotation
-        self.animate            = False     # steuert die Animation
-
+        self.scenetitle = scenetitle
+        self.width = width  # Breite des Fensters
+        self.height = height  # Höhe des Fensters
+        self.angle = 0  # Winkel der Rotation
+        self.angle_increment = 1  # Inkrement für die Rotation
+        self.animate = False  # steuert die Animation
 
     def init_GL(self):
         # setup buffer (vertices, colors, normals, ...)
-        self.gen_buffers()                  # erzeugt und initialisiert die Pufferobjekte
+        self.gen_buffers()  # erzeugt und initialisiert die Pufferobjekte
 
         # setup shader
         glBindVertexArray(self.vertex_array)
-        vertex_shader       = open("shader.vert","r").read()
-        fragment_shader     = open("shader.frag","r").read()
+        vertex_shader = open("shader.vert", "r").read()
+        fragment_shader = open("shader.frag", "r").read()
         # compileShader() liest und kompiliert die Shader und erstellt ein Shader-Programm
-        vertex_prog         = compileShader(vertex_shader, GL_VERTEX_SHADER)
-        frag_prog           = compileShader(fragment_shader, GL_FRAGMENT_SHADER)
+        vertex_prog = compileShader(vertex_shader, GL_VERTEX_SHADER)
+        frag_prog = compileShader(fragment_shader, GL_FRAGMENT_SHADER)
         self.shader_program = compileProgram(vertex_prog, frag_prog)
 
         # unbind vertex array to bind it again in method draw
         glBindVertexArray(0)
-
 
     def gen_buffers(self):
         # TODO: 
@@ -78,11 +76,11 @@ class Scene:
 
         # generate and fill buffer with vertex positions (attribute 0)
         positions = np.array([
-                                    0.0,  0.58,  0.0,   # 0. vertex
-                                    -0.5, -0.29,  0.0,  # 1. vertex
-                                    0.5, -0.29,  0.0,   # 2. vertex
-                                    0.0,  0.00, -0.58   # 3. vertex
-                                    ], dtype=np.float32)
+            0.0, 0.58, 0.0,  # 0. vertex
+            -0.5, -0.29, 0.0,  # 1. vertex
+            0.5, -0.29, 0.0,  # 2. vertex
+            0.0, 0.00, -0.58  # 3. vertex
+        ], dtype=np.float32)
         pos_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, pos_buffer)
         glBufferData(GL_ARRAY_BUFFER, positions.nbytes, positions, GL_STATIC_DRAW)
@@ -90,11 +88,11 @@ class Scene:
         glEnableVertexAttribArray(0)
 
         # generate and fill buffer with vertex colors (attribute 1)
-        colors = np.array([ 1.0, 0.0, 0.0, # 0. color
-                            0.0, 1.0, 0.0, # 1. color
-                            0.0, 0.0, 1.0, # 2. color
-                            1.0, 1.0, 1.0  # 3. color
-                            ], dtype=np.float32)
+        colors = np.array([1.0, 0.0, 0.0,  # 0. color
+                           0.0, 1.0, 0.0,  # 1. color
+                           0.0, 0.0, 1.0,  # 2. color
+                           1.0, 1.0, 1.0  # 3. color
+                           ], dtype=np.float32)
         col_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, col_buffer)
         glBufferData(GL_ARRAY_BUFFER, colors.nbytes, colors, GL_STATIC_DRAW)
@@ -112,12 +110,9 @@ class Scene:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
-
-
     def set_size(self, width, height):
         self.width = width
         self.height = height
-
 
     def draw(self):
         # TODO:
@@ -138,9 +133,9 @@ class Scene:
             self.angle += self.angle_increment
 
         # setup matrices
-        projection = perspective(45.0, self.width/self.height, 1.0, 5.0)
-        view       = look_at(0, 0, 2, 0, 0, 0, 0, 1, 0)
-        model      = rotate_y(self.angle)
+        projection = perspective(45.0, self.width / self.height, 1.0, 5.0)
+        view = look_at(0, 0, 2, 0, 0, 0, 0, 1, 0)
+        model = rotate_y(self.angle)
         mvp_matrix = projection @ view @ model
 
         # enable shader & set uniforms
@@ -153,12 +148,11 @@ class Scene:
 
         # enable vertex array & draw triangle(s)
         glBindVertexArray(self.vertex_array)
-        glDrawElements(GL_TRIANGLE_STRIP, self.indices.nbytes//4, GL_UNSIGNED_INT, None)    # zeichnet das Tetraeder
+        glDrawElements(GL_TRIANGLE_STRIP, self.indices.nbytes // 4, GL_UNSIGNED_INT, None)  # zeichnet das Tetraeder
 
         # unbind the shader and vertex array state
         glUseProgram(0)
         glBindVertexArray(0)
-
 
 
 class RenderWindow:
@@ -207,7 +201,6 @@ class RenderWindow:
         # exit flag
         self.exitNow = False
 
-
     def init_GL(self):
         # debug: print GL and GLS version
         # print('Vendor       : %s' % glGetString(GL_VENDOR))
@@ -221,12 +214,11 @@ class RenderWindow:
         # Enable depthtest
         glEnable(GL_DEPTH_TEST)
 
-
     def on_mouse_button(self, win, button, action, mods):
         print("mouse button: ", win, button, action, mods)
         # TODO: realize arcball metaphor for rotations as well as
         #       scaling and translation paralell to the image plane,
-        #       with the mouse. 
+        #       with the mouse.
 
     def on_keyboard(self, win, key, scancode, action, mods):
         print("keyboard: ", win, key, scancode, action, mods)
@@ -252,10 +244,8 @@ class RenderWindow:
                 # TODO:
                 print("rotate: around z-axis")
 
-
     def on_size(self, win, width, height):
         self.scene.set_size(width, height)
-
 
     def run(self):
         while not glfw.window_should_close(self.window) and not self.exitNow:
@@ -276,10 +266,8 @@ class RenderWindow:
         glfw.terminate()
 
 
-
 # main function
 if __name__ == '__main__':
-
     print("presse 'a' to toggle animation...")
 
     # set size of render viewport
