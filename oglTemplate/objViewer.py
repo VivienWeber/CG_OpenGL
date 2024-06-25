@@ -32,16 +32,18 @@ from OpenGL.arrays.vbo import VBO
 from OpenGL.GL.shaders import *
 
 from mat4 import *
+from oglTemplate.objReader import load_obj
 
 EXIT_FAILURE = -1
 
 
 class Scene:
     """
-        OpenGL scene class that render a RGB colored tetrahedron.
+        OpenGL scene class
     """
 
-    def __init__(self, width, height, scenetitle="Hello Triangle"):
+    def __init__(self, width, height, objPath, scenetitle="Computergrafik"):
+        self.objPath = objPath
         self.scenetitle = scenetitle
         self.width = width  # Breite des Fensters
         self.height = height  # Höhe des Fensters
@@ -68,51 +70,50 @@ class Scene:
     def gen_buffers(self):
         # TODO: 
         # 1. Load geometry from file and calc normals if not available
-        # 2. Load geometry and normals in buffer objects
+        vertices, normals, faces = load_obj(self, self.objPath)
 
+        indices = []
+        for face in faces:
+            for idx in face:
+                indices.append(idx[0])
+
+        # 2. Load geometry and normals in buffer objects
         # generate vertex array object
         self.vertex_array = glGenVertexArrays(1)
         glBindVertexArray(self.vertex_array)
 
-        # generate and fill buffer with vertex positions (attribute 0)
-        positions = np.array([
-            0.0, 0.58, 0.0,  # 0. vertex
-            -0.5, -0.29, 0.0,  # 1. vertex
-            0.5, -0.29, 0.0,  # 2. vertex
-            0.0, 0.00, -0.58  # 3. vertex
-        ], dtype=np.float32)
+        # Vertex positions
         pos_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, pos_buffer)
-        glBufferData(GL_ARRAY_BUFFER, positions.nbytes, positions, GL_STATIC_DRAW)
+        glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
         glEnableVertexAttribArray(0)
 
-        # generate and fill buffer with vertex colors (attribute 1)
-        colors = np.array([1.0, 0.0, 0.0,  # 0. color
-                           0.0, 1.0, 0.0,  # 1. color
-                           0.0, 0.0, 1.0,  # 2. color
-                           1.0, 1.0, 1.0  # 3. color
-                           ], dtype=np.float32)
-        col_buffer = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, col_buffer)
-        glBufferData(GL_ARRAY_BUFFER, colors.nbytes, colors, GL_STATIC_DRAW)
+        # Vertex normals
+        norm_buffer = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
+        glBufferData(GL_ARRAY_BUFFER, normals.nbytes, normals, GL_STATIC_DRAW)
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
         glEnableVertexAttribArray(1)
 
-        # generate index buffer (for triangle strip)
-        # Indizes: definiert die Reihenfolge, in der die Vertices gezeichnet werden
-        self.indices = np.array([0, 1, 2, 3, 0, 1], dtype=np.int32)
-        ind_buffer_object = glGenBuffers(1)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buffer_object)
+        # Index buffer
+        self.indices = np.array(indices, dtype=np.int32)
+        ind_buffer = glGenBuffers(1)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buffer)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
 
-        # unbind buffers to bind again in draw()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
     def set_size(self, width, height):
         self.width = width
         self.height = height
+
+    def change_projection(self):
+        if self.projection_type == 'perspective':
+            self.projection_type = 'orthographic'
+        else:
+            self.projection_type = 'perspective'
 
     def draw(self):
         # TODO:
@@ -125,7 +126,8 @@ class Scene:
         # 3. Rotate object with the mouse by realizing the arcball metaphor as 
         #    well as scaling an translation
         # 4. Realize Shadow Mapping
-        # 
+        #
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         if self.animate:
@@ -148,7 +150,10 @@ class Scene:
 
         # enable vertex array & draw triangle(s)
         glBindVertexArray(self.vertex_array)
-        glDrawElements(GL_TRIANGLE_STRIP, self.indices.nbytes // 4, GL_UNSIGNED_INT, None)  # zeichnet das Tetraeder
+        # es gibt statt GL_TRIANGLES noch zusätzlich GL_LINE_STRIP (stand vorher drin) und GL_TRIANGLE_STRIP
+        glDrawElements(GL_TRIANGLES,len(self.indices), GL_UNSIGNED_INT, None)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man nicht nur die Dreiecke sehen will
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)         # statt GL_LINE
 
         # unbind the shader and vertex array state
         glUseProgram(0)
@@ -254,7 +259,7 @@ class RenderWindow:
 
             # setup viewport
             width, height = glfw.get_framebuffer_size(self.window)
-            glViewport(0, 0, width, height);
+            glViewport(0, 0, width, height)
 
             # call the rendering function
             self.scene.draw()
@@ -268,16 +273,21 @@ class RenderWindow:
 
 # main function
 if __name__ == '__main__':
-    print("presse 'a' to toggle animation...")
 
-    # set size of render viewport
-    width, height = 640, 480
+    if len(sys.argv) < 2:
+        # objectPath = sys.argv[1]
+        print("presse 'a' to toggle animation...")
 
-    # instantiate a scene
-    scene = Scene(width, height)
+        # set size of render viewport
+        width, height = 640, 480
 
-    # pass the scene to a render window ... 
-    rw = RenderWindow(scene)
+        # instantiate a scene
+        scene = Scene(width, height, objPath="../models/bunny.obj")
 
-    # ... and start main loop
-    rw.run()
+        # pass the scene to a render window ...
+        rw = RenderWindow(scene)
+
+        # ... and start main loop
+        rw.run()
+    else:
+        print("Objectpath doesn't exist")
