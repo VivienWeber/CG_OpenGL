@@ -32,7 +32,7 @@ from OpenGL.arrays.vbo import VBO
 from OpenGL.GL.shaders import *
 
 from mat4 import *
-from oglTemplate.objReader import load_obj
+from oglTemplate.objReader import load_obj, calculate_vertex_normals
 
 EXIT_FAILURE = -1
 
@@ -71,11 +71,16 @@ class Scene:
         # TODO: 
         # 1. Load geometry from file and calc normals if not available
         vertices, normals, faces = load_obj(self, self.objPath)
+        if len(normals) == 0:
+            normals = calculate_vertex_normals(vertices, faces)
+
+        vertices = np.array(vertices, dtype=np.float32)
+        normals = np.array(normals, dtype=np.float32)
 
         indices = []
         for face in faces:
             for idx in face:
-                indices.append(idx[0])
+                indices.append(idx)
 
         # 2. Load geometry and normals in buffer objects
         # generate vertex array object
