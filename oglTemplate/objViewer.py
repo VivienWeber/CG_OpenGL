@@ -78,7 +78,6 @@ class Scene:
     def init_GL(self):
         # setup buffer (vertices, colors, normals, ...)
         self.gen_buffers()  # erzeugt und initialisiert die Pufferobjekte
-
         # setup shader
         glBindVertexArray(self.vertex_array)
         vertex_shader = open("shader.vert", "r").read()
@@ -92,8 +91,6 @@ class Scene:
         glBindVertexArray(0)
 
     def gen_buffers(self):
-        # TODO:
-        # 1. Load geometry from file and calc normals if not available
         vertices, faces, normals, colors = load_obj(self, self.objPath)
         if len(normals) == 0:
             normals = calculate_vertex_normals(vertices, faces)
@@ -106,7 +103,6 @@ class Scene:
             for idx in face:
                 indices.append(idx)
 
-        # 2. Load geometry and normals in buffer objects
         # generate vertex array object
         self.vertex_array = glGenVertexArrays(1)
         glBindVertexArray(self.vertex_array)
@@ -154,7 +150,9 @@ class Scene:
             self.projection_type = 'perspective'
 
     def projectOnSphere(self, x, y, r):
-        """ Arcball-Metapher """
+        """
+            Arcball-Metapher
+        """
 
         x, y = x - width / 2.0, height / 2.0 - y
 
@@ -202,7 +200,7 @@ class Scene:
             self.first_click_done = False
 
     def draw(self):
-        # Buffer löschen
+        # Buffer löschen (da werden die Informationen reingeladen)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         if self.animate:
@@ -249,7 +247,9 @@ class Scene:
 
 
 def switch_projection():
-    """ Switches the projection type between perspective and orthographic. """
+    """
+        Switches the projection type between perspective and orthographic.
+    """
 
     if scene.projection_type == 'perspective':
         print("Wechsel zu Orhogonal-Projektion")
@@ -408,7 +408,7 @@ class RenderWindow:
 if __name__ == '__main__':
 
     if len(sys.argv) < 2:
-        # objectPath = sys.argv[1]
+        objectPath = sys.argv[1]
         print("presse 'a' to toggle animation...")
 
         # set size of render viewport
