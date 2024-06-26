@@ -259,6 +259,15 @@ def switch_projection():
         print("Wechsel zu Zentral-Projektion")
 
 
+#def rotation_matrix(self, axis, theta):
+#    axis = axis / np.sqrt(np.dot(axis, axis))
+#    a = np.cos(theta / 2.0)
+#    b, c, d = -axis * np.sin(theta / 2.0)
+#    return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c + a * d), 2 * (b * d - a * c)],
+#                     [2 * (b * c - a * d), a * a + c * c - b * b - d * d, 2 * (c * d + a * b)],
+#                     [2 * (b * d + a * c), 2 * (c * d - a * b), a * a + d * d - b * b - c * c]])
+
+
 class RenderWindow:
     """
         GLFW Rendering window class
@@ -318,6 +327,8 @@ class RenderWindow:
 
         # Enable depthtest
         glEnable(GL_DEPTH_TEST)
+
+
 
     def zoom_in(self, zoomFactor):
         if self.scene.fovy - zoomFactor > 0:
