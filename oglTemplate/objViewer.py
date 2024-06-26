@@ -328,7 +328,7 @@ class RenderWindow:
         self.scene.fovy += zoomFactor
         self.scene.draw()
 
-    # sollte bei gedrückter mittlerer Maustaste gehen, klappt aber bei meinem Touchpad nicht
+    # für Touchpad-User ": #" wegnehmen
     def on_mouse_scroll(self, yOffset, scrollPos, scrollNeg):
         if yOffset == 0.0: # or scrollNeg == -0.1: # für mac-user
             self.zoom_out(1)
