@@ -119,7 +119,7 @@ class Scene:
         glEnableVertexAttribArray(0)
 
         # Vertex normals
-        farben = np.array(colors, dtype=np.float32).flatten() # nicht Listen in Listen sondern nur eine Liste insg.
+        farben = np.array(colors, dtype=np.float32).flatten()  # nicht Listen in Listen sondern nur eine Liste insg.
         norm_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
         glBufferData(GL_ARRAY_BUFFER, farben.nbytes, farben, GL_STATIC_DRAW)
@@ -154,6 +154,8 @@ class Scene:
             self.projection_type = 'perspective'
 
     def projectOnSphere(self, x, y, r):
+        """ Arcball-Metapher """
+
         x, y = x - width / 2.0, height / 2.0 - y
 
         a = min(r * r, x ** 2 + y ** 2)
@@ -207,7 +209,7 @@ class Scene:
             # increment rotation angle in each frame
             self.angleX += self.angle_increment
 
-        # Perspektivische oder orthographische Projektion einstellen
+        # Perspektivische bzw orthographische Projektion einstellen
         if self.projection_type == 'perspective':
             projection = perspective(self.fovy, self.width / self.height, 1.0, 5.0)
         else:
@@ -219,8 +221,9 @@ class Scene:
         # Modell-Rotations-Transformationen
         model_rotation_x_y_z = rotate_x(self.angleX) @ rotate_y(self.angleY) @ rotate_z(self.angleZ)
 
-        # Modell Translation und Rotation basierend auf Mausbewegungen -> Matrixmanipulation für die Rotation
-        model = translate(self.translation_x, 0, 0) @ rotate(self.rotation_alpha, self.rotation_v) @ model_rotation_x_y_z
+        # Modell Translation und Rotation basierend auf Mausbewegungen → Matrixmanipulation für die Rotation
+        model = translate(self.translation_x, 0, 0) @ rotate(self.rotation_alpha,
+                                                             self.rotation_v) @ model_rotation_x_y_z
 
         # Model-View-Projection Matrix berechnen
         mvp_matrix = projection @ view @ model
@@ -246,12 +249,14 @@ class Scene:
 
 
 def switch_projection():
+    """ Switches the projection type between perspective and orthographic. """
+
     if scene.projection_type == 'perspective':
-        print("switch to perspective orthographic")
+        print("Wechsel zu Orhogonal-Projektion")
         scene.projection_type = 'orthographic'
     else:
         scene.projection_type = 'perspective'
-        print("switch to perspective perspective")
+        print("Wechsel zu Zentral-Projektion")
 
 
 class RenderWindow:
@@ -323,8 +328,9 @@ class RenderWindow:
         self.scene.fovy += zoomFactor
         self.scene.draw()
 
+    # sollte bei gedrückter mittlerer Maustaste gehen, klappt aber bei meinem Touchpad nicht
     def on_mouse_scroll(self, yOffset, scrollPos, scrollNeg):
-        if yOffset == 0.0: # or scrollNeg == -0.1: für mac-user
+        if yOffset == 0.0: # or scrollNeg == -0.1: # für mac-user
             self.zoom_out(1)
         else:
             self.zoom_in(1)
@@ -353,20 +359,19 @@ class RenderWindow:
             if key == glfw.KEY_X:
                 self.scene.angleX += self.scene.angle_rotation_increment
                 self.scene.draw()
-                print("rotate: x-axis")
+                print("Rotiere um die x-Achse")
             if key == glfw.KEY_Y:
                 self.scene.angleY += self.scene.angle_rotation_increment
                 self.scene.draw()
-                print("rotate: y-axis")
+                print("Rotiere um die y-Achse")
             if key == glfw.KEY_Z:
                 self.scene.angleZ += self.scene.angle_rotation_increment
                 self.scene.draw()
-                print("rotate: z-axis")
+                print("Rotiere um die Z-Achse")
             if key == glfw.KEY_I:
                 self.zoom_in(5)
             if key == glfw.KEY_O:
                 self.zoom_out(5)
-
 
     def on_size(self, win, width, height):
         self.scene.set_size(width, height)
@@ -404,7 +409,7 @@ if __name__ == '__main__':
         width, height = 640, 480
 
         # instantiate a scene
-        scene = Scene(width, height, objPath="../models/bunny.obj")
+        scene = Scene(width, height, objPath="../models/elephant.obj")
 
         # pass the scene to a render window ...
         rw = RenderWindow(scene)
