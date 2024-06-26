@@ -56,7 +56,7 @@ class Scene:
         self.translation_x = 0          # X-Translation der Kamera
 
         # Animationseinstellungen
-        self.angle_rotation_increment = 15  # Inkrement für die Rotationswinkel
+        self.angle_rotation_increment = 30  # Inkrement für die Rotationswinkel
         self.angle_increment = 1
         self.angle = 0
         self.angleX = 0                     # Rotationswinkel um die X-Achse
@@ -92,7 +92,7 @@ class Scene:
         glBindVertexArray(0)
 
     def gen_buffers(self):
-        # TODO: 
+        # TODO:
         # 1. Load geometry from file and calc normals if not available
         vertices, faces, normals, colors = load_obj(self, self.objPath)
         if len(normals) == 0:
@@ -342,6 +342,12 @@ class RenderWindow:
             x, _ = glfw.get_cursor_pos(win)
             if action == glfw.PRESS:
                 self.scene.prev_mouse_pos = x  # Setzen der x-maus koordinate
+
+            # if button == glfw.MOUSE_BUTTON_MIDDLE and action == glfw.PRESS:
+            #     x, y = glfw.get_cursor_pos(win)
+            #     self.scene.prev_mouse_pos = (x, y)
+            # elif button == glfw.MOUSE_BUTTON_MIDDLE and action == glfw.RELEASE:
+            #     self.scene.prev_mouse_pos = None
 
     def on_keyboard(self, win, key, scancode, action, mods):
         print("keyboard: ", win, key, scancode, action, mods)
