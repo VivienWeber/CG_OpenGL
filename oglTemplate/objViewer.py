@@ -30,7 +30,7 @@ from OpenGL.GL import *
 from OpenGL.GL.shaders import *
 
 from mat4 import *
-from oglTemplate.objReader import load_obj, calculate_vertex_normals
+from objReader import load_obj, calculate_vertex_normals
 
 EXIT_FAILURE = -1
 
@@ -405,9 +405,12 @@ class RenderWindow:
 
 
 # main function
+
+# TODO PROGRAMM IN KONSOLE AUSFÜHREN:
+# cd CG -> cd oglTemplate -> python3 objViewer.py ../models/squirrel.obj
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         objectPath = sys.argv[1]
         print("presse 'a' to toggle animation...")
 
@@ -415,7 +418,7 @@ if __name__ == '__main__':
         width, height = 640, 480
 
         # instantiate a scene
-        scene = Scene(width, height, objPath="../models/elephant.obj")
+        scene = Scene(width, height, objectPath)
 
         # pass the scene to a render window ...
         rw = RenderWindow(scene)
