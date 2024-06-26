@@ -101,6 +101,11 @@ class Scene:
         vertices = np.array(vertices, dtype=np.float32)
         normals = np.array(normals, dtype=np.float32)
 
+        indices = []
+        for face in faces:
+            for idx in face:
+                indices.append(idx)
+
         # 2. Load geometry and normals in buffer objects
         # generate vertex array object
         self.vertex_array = glGenVertexArrays(1)
@@ -136,7 +141,13 @@ class Scene:
 
         # Index buffer
         # self.indices = np.array([0, 1, 2, 3, 0, 1], dtype=np.int32)
-        self.indices = np.array(faces, dtype=np.int32)
+        # self.indices = np.array(faces, dtype=np.int32)
+        # ind_buffer = glGenBuffers(1)
+        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buffer)
+        # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
+
+        # Index buffer
+        self.indices = np.array(indices, dtype=np.int32)
         ind_buffer = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buffer)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
@@ -238,7 +249,7 @@ class Scene:
         # Vertex-Array binden und Linien zeichnen
         glBindVertexArray(self.vertex_array)
         # es gibt statt GL_TRIANGLES noch zusätzlich GL_LINE_STRIP (stand vorher drin) und GL_TRIANGLE_STRIP
-        glDrawElements(GL_TRIANGLES, self.indices.nbytes // 4, GL_UNSIGNED_INT, None)
+        glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man nicht nur die Dreiecke sehen will
         # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
