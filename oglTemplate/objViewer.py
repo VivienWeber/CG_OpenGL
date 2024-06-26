@@ -119,7 +119,12 @@ class Scene:
         glEnableVertexAttribArray(0)
 
         # Vertex normals
-        colors = np.array([1.0, 1.0, 1.0], dtype=np.float32)
+        colors = np.array([
+                            0.0, 0.0, 1.0,  # 0. color
+                            0.0, 0.0, 1.0,  # 1. color
+                            0.0, 0.0, 1.0,  # 2. color
+                            0.0, 0.0, 0.0,  # 3. color
+                           ], dtype=np.float32)
         norm_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
         glBufferData(GL_ARRAY_BUFFER, colors.nbytes, colors, GL_STATIC_DRAW)
@@ -237,9 +242,9 @@ class Scene:
         # Vertex-Array binden und Linien zeichnen
         glBindVertexArray(self.vertex_array)
         # es gibt statt GL_TRIANGLES noch zusätzlich GL_LINE_STRIP (stand vorher drin) und GL_TRIANGLE_STRIP
-        glDrawElements(GL_TRIANGLES,len(self.indices), GL_UNSIGNED_INT, None)
-        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man nicht nur die Dreiecke sehen will
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man nicht nur die Dreiecke sehen will
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
         # unbind the shader and vertex array state
         glUseProgram(0)
