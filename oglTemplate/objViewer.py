@@ -94,7 +94,7 @@ class Scene:
     def gen_buffers(self):
         # TODO: 
         # 1. Load geometry from file and calc normals if not available
-        vertices, faces, normals = load_obj(self, self.objPath)
+        vertices, faces, normals, colors = load_obj(self, self.objPath)
         if len(normals) == 0:
             normals = calculate_vertex_normals(vertices, faces)
 
@@ -119,25 +119,12 @@ class Scene:
         glEnableVertexAttribArray(0)
 
         # Vertex normals
-        colors = np.array([
-                            0.0, 0.0, 1.0,  # 0. color
-                            0.0, 0.0, 1.0,  # 1. color
-                            0.0, 0.0, 1.0,  # 2. color
-                            0.0, 0.0, 1.0,  # 3. color
-                           ], dtype=np.float32)
-        col_buffer = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, col_buffer)
-        glBufferData(GL_ARRAY_BUFFER, colors.nbytes, colors, GL_STATIC_DRAW)
+        farben = np.array(colors, dtype=np.float32).flatten() # nicht Listen in Listen sondern nur eine Liste insg.
+        norm_buffer = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
+        glBufferData(GL_ARRAY_BUFFER, farben.nbytes, farben, GL_STATIC_DRAW)
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
         glEnableVertexAttribArray(1)
-
-        # Kanten werden farbig mit diesem Code statt mit colors
-        # normals = np.array(normals, dtype=np.float32)
-        # norm_buffer = glGenBuffers(1)
-        # glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
-        # glBufferData(GL_ARRAY_BUFFER, normals.nbytes, normals, GL_STATIC_DRAW)
-        # glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
-        # glEnableVertexAttribArray(1)
 
         # Index buffer
         # self.indices = np.array([0, 1, 2, 3, 0, 1], dtype=np.int32)
@@ -322,7 +309,7 @@ class RenderWindow:
         # print('Renderer     : %s' % glGetString(GL_RENDERER))
 
         # set background color to black
-        glClearColor(1, 1, 1, 1)
+        glClearColor(0, 0, 0, 0)
 
         # Enable depthtest
         glEnable(GL_DEPTH_TEST)

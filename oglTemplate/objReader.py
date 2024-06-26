@@ -11,12 +11,17 @@ def load_obj(self, file_path):
     faces = []                              # Liste der Dreiecke
 
     with open(file_path, 'r') as file:      # Datei im Lesemodus öffnen
+        colors = []
+
         for line in file:
             if line.startswith('#') or line in ['\n', '\r\n']:
                 continue
             stripped_line = line.strip()
             if stripped_line.startswith('v '):
                 vertex = list(map(float, stripped_line[2:].split()))
+                colors.append([0.0, 1.0, 0.0,
+                               0.0, 1.0, 0.0,
+                               0.0, 1.0, 0.0])
                 vertices.append(vertex)
             elif stripped_line.startswith('f '):
                 face = stripped_line[2:].split()
@@ -44,7 +49,7 @@ def load_obj(self, file_path):
     # Faces als Array
     faces = np.array(faces, dtype=np.int32)
 
-    return vertices, faces, normals
+    return vertices, faces, normals, colors
 
 
 def calculate_vertex_normals(vertices, faces):
