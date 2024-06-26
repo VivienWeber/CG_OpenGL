@@ -123,7 +123,7 @@ class Scene:
                             0.0, 0.0, 1.0,  # 0. color
                             0.0, 0.0, 1.0,  # 1. color
                             0.0, 0.0, 1.0,  # 2. color
-                            0.0, 0.0, 0.0,  # 3. color
+                            0.0, 0.0, 1.0,  # 3. color
                            ], dtype=np.float32)
         col_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, col_buffer)

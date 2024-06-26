@@ -14,21 +14,17 @@ def load_obj(self, file_path):
         for line in file:
             if line.startswith('#') or line in ['\n', '\r\n']:
                 continue
-            parts = line.split()
-            if line.startswith('v '):
-                # Vertex-Koordinaten der Liste hinzufügen
-                vertices.append([float(parts[1]), float(parts[2]), float(parts[3])])
-            elif line.startswith('vn '):
-                parts = line.split()
-                # Normalen-Koordinaten der Liste hinzufügen
-                normals.append([float(parts[1]), float(parts[2]), float(parts[3])])
-            elif line.startswith('f '):
-                parts = line.split()
-                face_indices = []           # Liste der Face-Indizes
-                for part in parts[1:]:
-                    idx = part.split('//')  # Face-Teil in Vertex- und Normalen-Indizes teilen
-                    face_indices.append((int(idx[0]) - 1, int(idx[1]) - 1))  # -1 weil Objekte bei Zeile 1 beginnen
+            stripped_line = line.strip()
+            if stripped_line.startswith('v '):
+                vertex = list(map(float, stripped_line[2:].split()))
+                vertices.append(vertex)
+            elif stripped_line.startswith('f '):
+                face = stripped_line[2:].split()
+                face_indices = [int(index.split('/')[0]) - 1 for index in face]
                 faces.append(face_indices)
+            elif stripped_line.startswith('vn '):
+                normal = list(map(float, stripped_line[3:].split()))
+                normals.append(normal)
 
     # Liste der Vertices in Numpy Array konvertieren
     vertices = np.array(vertices, dtype=np.float32) # Standardtyp für Indizes in OpenGL
