@@ -29,13 +29,13 @@ def load_obj(self, file_path):
     # Liste der Vertices in Numpy Array konvertieren
     vertices = np.array(vertices, dtype=np.float32) # Standardtyp für Indizes in OpenGL
 
-    # Mittelpunkt der Vertices berechnen
+    # Mittelpunkt der Vertices berechnen und skalieren
     center = calculate_center(vertices)
 
     # Vertices zum Mittelpunkt verschieben
     vertices = translate_to_center(vertices, center)
 
-    # Vertices skalieren
+    # Vertices
     vertices = scale(vertices)
 
     # Vertex-Normalen berechnen

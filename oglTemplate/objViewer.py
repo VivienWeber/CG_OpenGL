@@ -101,11 +101,6 @@ class Scene:
         vertices = np.array(vertices, dtype=np.float32)
         normals = np.array(normals, dtype=np.float32)
 
-        indices = []
-        for face in faces:
-            for idx in face:
-                indices.append(idx)
-
         # 2. Load geometry and normals in buffer objects
         # generate vertex array object
         self.vertex_array = glGenVertexArrays(1)
@@ -125,8 +120,8 @@ class Scene:
                             0.0, 0.0, 1.0,  # 2. color
                             0.0, 0.0, 0.0,  # 3. color
                            ], dtype=np.float32)
-        norm_buffer = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
+        col_buffer = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, col_buffer)
         glBufferData(GL_ARRAY_BUFFER, colors.nbytes, colors, GL_STATIC_DRAW)
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
         glEnableVertexAttribArray(1)
@@ -140,7 +135,8 @@ class Scene:
         # glEnableVertexAttribArray(1)
 
         # Index buffer
-        self.indices = np.array(indices, dtype=np.int32)
+        # self.indices = np.array([0, 1, 2, 3, 0, 1], dtype=np.int32)
+        self.indices = np.array(faces, dtype=np.int32)
         ind_buffer = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buffer)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
@@ -211,7 +207,7 @@ class Scene:
 
         if self.animate:
             # increment rotation angle in each frame
-            self.angle += self.angle_increment
+            self.angleX += self.angle_increment
 
         # Perspektivische oder orthographische Projektion einstellen
         if self.projection_type == 'perspective':
@@ -225,7 +221,7 @@ class Scene:
         # Modell-Rotations-Transformationen
         model_rotation_x_y_z = rotate_x(self.angleX) @ rotate_y(self.angleY) @ rotate_z(self.angleZ)
 
-        # Modell Translation und Rotation basierend auf Mausbewegungen
+        # Modell Translation und Rotation basierend auf Mausbewegungen -> Matrixmanipulation für die Rotation
         model = translate(self.translation_x, 0, 0) @ rotate(self.rotation_alpha, self.rotation_v) @ model_rotation_x_y_z
 
         # Model-View-Projection Matrix berechnen
@@ -242,7 +238,7 @@ class Scene:
         # Vertex-Array binden und Linien zeichnen
         glBindVertexArray(self.vertex_array)
         # es gibt statt GL_TRIANGLES noch zusätzlich GL_LINE_STRIP (stand vorher drin) und GL_TRIANGLE_STRIP
-        glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
+        glDrawElements(GL_TRIANGLES, self.indices.nbytes // 4, GL_UNSIGNED_INT, None)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man nicht nur die Dreiecke sehen will
         # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
@@ -315,7 +311,7 @@ class RenderWindow:
         # print('Renderer     : %s' % glGetString(GL_RENDERER))
 
         # set background color to black
-        glClearColor(0.0, 0.0, 0.0, 0.0)
+        glClearColor(1, 1, 1, 1)
 
         # Enable depthtest
         glEnable(GL_DEPTH_TEST)
