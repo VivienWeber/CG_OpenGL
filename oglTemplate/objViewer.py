@@ -40,14 +40,14 @@ class Scene:
         OpenGL scene class
     """
 
-    def __init__(self, width, height, objPath, scenetitle="Computergrafik"):
+    def __init__(self, width, height, objectPath, scenetitle="Computergrafik"):
         # Allgemeine Einstellungen
         self.scenetitle = scenetitle
         self.width = width
         self.height = height
 
         # Objekt-spezifische Einstellungen
-        self.objPath = objPath          # Pfad zur Objektdatei
+        self.objectPath = objectPath    # Pfad zur Objektdatei
         self.indices = None             # Indizes der Dreiecke
         self.vertex_array = None        # Vertex-Array-Objekt
 
@@ -56,13 +56,13 @@ class Scene:
         self.translation_x = 0          # X-Translation der Kamera
 
         # Animationseinstellungen
-        self.angle_rotation_increment = 30  # Inkrement für die Rotationswinkel
-        self.angle_increment = 1
+        self.angle_rotation_increment = 30       # Inkrement für die Rotationswinkel
+        self.angle_increment = 5                 # hier die Schnelligkeit der Rotation einstellen
         self.angle = 0
-        self.angleX = 0                     # Rotationswinkel um die X-Achse
-        self.angleY = 0                     # Rotationswinkel um die Y-Achse
-        self.angleZ = 0                     # Rotationswinkel um die Z-Achse
-        self.animate = False                # Flag für Animation
+        self.rot_angle_x = 0                     # Rotationswinkel um die X-Achse
+        self.rot_angle_y = 0                     # Rotationswinkel um die Y-Achse
+        self.rot_angle_z = 0                     # Rotationswinkel um die Z-Achse
+        self.animate = False                     # Flag für Animation
 
         # Mausinteraktion für Rotation
         self.prev_mouse_pos = None              # Vorherige Mausposition
@@ -91,7 +91,7 @@ class Scene:
         glBindVertexArray(0)
 
     def gen_buffers(self):
-        vertices, faces, normals, colors = load_obj(self, self.objPath)
+        vertices, faces, normals, colors = load_obj(self, self.objectPath)
         if len(normals) == 0:
             normals = calculate_vertex_normals(vertices, faces)
 
@@ -205,7 +205,7 @@ class Scene:
 
         if self.animate:
             # increment rotation angle in each frame
-            self.angleX += self.angle_increment
+            self.rot_angle_x += self.angle_increment
 
         # Perspektivische bzw orthographische Projektion einstellen
         if self.projection_type == 'perspective':
@@ -217,7 +217,7 @@ class Scene:
         view = look_at(0, 0, 2, 0, 0, 0, 0, 1, 0)
 
         # Modell-Rotations-Transformationen
-        model_rotation_x_y_z = rotate_x(self.angleX) @ rotate_y(self.angleY) @ rotate_z(self.angleZ)
+        model_rotation_x_y_z = rotate_x(self.rot_angle_x) @ rotate_y(self.rot_angle_y) @ rotate_z(self.rot_angle_z)
 
         # Modell Translation und Rotation basierend auf Mausbewegungen → Matrixmanipulation für die Rotation
         model = translate(self.translation_x, 0, 0) @ rotate(self.rotation_alpha,
@@ -246,7 +246,7 @@ class Scene:
         glBindVertexArray(0)
 
 
-def switch_projection():
+def switch_projection_type():
     """
         Switches the projection type between perspective and orthographic.
     """
@@ -302,6 +302,8 @@ class RenderWindow:
         glfw.set_mouse_button_callback(self.window, self.on_mouse_button)
         glfw.set_key_callback(self.window, self.on_keyboard)
         glfw.set_window_size_callback(self.window, self.on_size)
+
+        # set scroll callback
         glfw.set_scroll_callback(self.window, self.on_mouse_scroll)
 
         # create scene
@@ -328,23 +330,23 @@ class RenderWindow:
         # Enable depthtest
         glEnable(GL_DEPTH_TEST)
 
-
-
-    def zoom_in(self, zoomFactor):
+    def reduce_field_of_vision(self, zoomFactor):
+        """ Zoom in """
         if self.scene.fovy - zoomFactor > 0:
             self.scene.fovy -= zoomFactor
         self.scene.draw()
 
-    def zoom_out(self, zoomFactor):
+    def enlarge_field_of_vision(self, zoomFactor):
+        """ Zoom out """
         self.scene.fovy += zoomFactor
         self.scene.draw()
 
     # für Touchpad-User ": #" wegnehmen
     def on_mouse_scroll(self, yOffset, scrollPos, scrollNeg):
         if yOffset == 0.0: # or scrollNeg == -0.1: # für mac-user
-            self.zoom_out(1)
+            self.enlarge_field_of_vision(1)
         else:
-            self.zoom_in(1)
+            self.reduce_field_of_vision(1)
 
     def on_mouse_button(self, win, button, action, mods):
         print("mouse button: ", win, button, action, mods)
@@ -369,26 +371,26 @@ class RenderWindow:
             if key == glfw.KEY_A:
                 self.scene.animate = not self.scene.animate
             if key == glfw.KEY_P:
-                switch_projection()
+                switch_projection_type()
             if key == glfw.KEY_S:
                 # TODO:
                 print("toggle shading: wireframe, grouraud, phong")
             if key == glfw.KEY_X:
-                self.scene.angleX += self.scene.angle_rotation_increment
+                self.scene.rot_angle_x += self.scene.angle_rotation_increment
                 self.scene.draw()
                 print("Rotiere um die x-Achse")
             if key == glfw.KEY_Y:
-                self.scene.angleY += self.scene.angle_rotation_increment
+                self.scene.rot_angle_y += self.scene.angle_rotation_increment
                 self.scene.draw()
                 print("Rotiere um die y-Achse")
             if key == glfw.KEY_Z:
-                self.scene.angleZ += self.scene.angle_rotation_increment
+                self.scene.rot_angle_z += self.scene.angle_rotation_increment
                 self.scene.draw()
                 print("Rotiere um die Z-Achse")
             if key == glfw.KEY_I:
-                self.zoom_in(5)
+                self.reduce_field_of_vision(5)
             if key == glfw.KEY_O:
-                self.zoom_out(5)
+                self.enlarge_field_of_vision(5)
 
     def on_size(self, win, width, height):
         self.scene.set_size(width, height)

@@ -19,9 +19,9 @@ def load_obj(self, file_path):
             stripped_line = line.strip()
             if stripped_line.startswith('v '):
                 vertex = list(map(float, stripped_line[2:].split()))
-                colors.append([0.0, 1.0, 0.0,
-                               0.0, 1.0, 0.0,
-                               0.0, 1.0, 0.0])
+                colors.append([0.0, 1.0, 1.0,
+                               0.0, 1.0, 1.0,
+                               0.0, 1.0, 1.0])
                 vertices.append(vertex)
             elif stripped_line.startswith('f '):
                 face = stripped_line[2:].split()
