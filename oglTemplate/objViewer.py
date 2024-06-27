@@ -172,6 +172,14 @@ class Scene:
             self.prev_mouse_pos = x
             self.draw()
 
+            # Klausurrelevant
+            # jeder 3D-Punkt hat eine 3D-Normale!
+            # beim Flat-Shading bekommt das Face welche Normale? Der erste Vertex vom Dreieck der reinkommt, dessen Vertexnormale definiert die Farbe
+            # beim Gouroud-Shading bekommt das Dreieck einen Farbverlauf über die barizentrischen Koordinaten im Dreieck
+                # Beleuchtungsmodell wird trotzdem nur für ein Vertex ausgerechnet
+            # beim Phong-Shading werden die Normalen auch barizentrisch berechnet -> eine Normale pro Pixel
+                # Beleuchtungsmodell wird pro Pixel ausgerechnet
+
         if glfw.get_mouse_button(win, glfw.MOUSE_BUTTON_LEFT) == glfw.PRESS:
             px, py, pz = self.projectOnSphere(x, y, 500)
             if not self.first_click_done:  # Erster Klick festlegen
@@ -338,12 +346,15 @@ class RenderWindow:
 
     def enlarge_field_of_vision(self, zoomFactor):
         """ Zoom out """
-        self.scene.fovy += zoomFactor
-        self.scene.draw()
+        if self.scene.fovy < 180:
+            self.scene.fovy += zoomFactor
+            self.scene.draw()
+        else:
+            print("Verhindern, dass das Objekt gespiegelt und wieder größer wird")
 
     # für Touchpad-User ": #" wegnehmen
     def on_mouse_scroll(self, yOffset, scrollPos, scrollNeg):
-        if yOffset == 0.0: # or scrollNeg == -0.1: # für mac-user
+        if yOffset == 0.0 or scrollNeg == -0.1: # für mac-user
             self.enlarge_field_of_vision(1)
         else:
             self.reduce_field_of_vision(1)
