@@ -158,6 +158,7 @@ class Scene:
 
         a = min(r * r, x ** 2 + y ** 2)
         z = np.sqrt(r * r - a)
+        # z = np.sqrt(a)  # Korrektur: Zuerst quadrieren und dann Wurzel ziehen
         l = np.sqrt(x ** 2 + y ** 2 + z ** 2)
         if l == 0:
             return x, y, z
@@ -246,7 +247,7 @@ class Scene:
         glBindVertexArray(self.vertex_array)
         # es gibt statt GL_TRIANGLES noch zusätzlich GL_LINE_STRIP (stand vorher drin) und GL_TRIANGLE_STRIP
         glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man nicht nur die Dreiecke sehen will
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)           # auskommentieren, wenn man die gefüllten Dreiecke erstellen will
         # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
         # unbind the shader and vertex array state
@@ -354,7 +355,7 @@ class RenderWindow:
 
     # für Touchpad-User ": #" wegnehmen
     def on_mouse_scroll(self, yOffset, scrollPos, scrollNeg):
-        if yOffset == 0.0 or scrollNeg == -0.1: # für mac-user
+        if yOffset == 0.0: # or scrollNeg == -0.1: # für mac-user
             self.enlarge_field_of_vision(1)
         else:
             self.reduce_field_of_vision(1)
