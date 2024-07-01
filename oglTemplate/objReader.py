@@ -23,13 +23,13 @@ def load_obj(self, file_path):
                                0.0, 1.0, 1.0,
                                0.0, 1.0, 1.0])
                 vertices.append(vertex)
+            elif stripped_line.startswith('vn '):
+                normal = list(map(float, stripped_line[3:].split()))
+                normals.append(normal)
             elif stripped_line.startswith('f '):
                 face = stripped_line[2:].split()
                 face_indices = [int(index.split('/')[0]) - 1 for index in face]
                 faces.append(face_indices)
-            elif stripped_line.startswith('vn '):
-                normal = list(map(float, stripped_line[3:].split()))
-                normals.append(normal)
 
     # Liste der Vertices in Numpy Array konvertieren
     vertices = np.array(vertices, dtype=np.float32) # Standardtyp für Indizes in OpenGL

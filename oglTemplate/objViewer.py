@@ -71,6 +71,7 @@ class Scene:
         self.rotation_v = np.array([1, 1, 1])   # Rotationsachse für Mausrotation
         self.rotation_alpha = 0.0               # Rotationswinkel für Mausrotation
         self.first_click_done = False           # Flag, ob erster Klick erfolgt ist
+        self.rotation_model = rotate(0, np.array([1, 1, 1]))
 
         # Projektionstyp (perspektivisch oder orthographisch)
         self.projection_type = 'perspective'    # Aktueller Projektionstyp
@@ -158,7 +159,6 @@ class Scene:
 
         a = min(r * r, x ** 2 + y ** 2)
         z = np.sqrt(r * r - a)
-        # z = np.sqrt(a)  # Korrektur: Zuerst quadrieren und dann Wurzel ziehen
         l = np.sqrt(x ** 2 + y ** 2 + z ** 2)
         if l == 0:
             return x, y, z
@@ -226,11 +226,10 @@ class Scene:
         view = look_at(0, 0, 2, 0, 0, 0, 0, 1, 0)
 
         # Modell-Rotations-Transformationen
-        model_rotation_x_y_z = rotate_x(self.rot_angle_x) @ rotate_y(self.rot_angle_y) @ rotate_z(self.rot_angle_z)
+        rotation_model_x_y_z = rotate_x(self.rot_angle_x) @ rotate_y(self.rot_angle_y) @ rotate_z(self.rot_angle_z)
 
         # Modell Translation und Rotation basierend auf Mausbewegungen → Matrixmanipulation für die Rotation
-        model = translate(self.translation_x, 0, 0) @ rotate(self.rotation_alpha,
-                                                             self.rotation_v) @ model_rotation_x_y_z
+        model = translate(self.translation_x, 0, 0) @ rotation_model_x_y_z @ self.rotation_model
 
         # Model-View-Projection Matrix berechnen
         mvp_matrix = projection @ view @ model
@@ -314,6 +313,7 @@ class RenderWindow:
 
         # set scroll callback
         glfw.set_scroll_callback(self.window, self.on_mouse_scroll)
+        glfw.set_cursor_pos_callback(self.window, self.mouse_move_event)
 
         # create scene
         self.scene = scene
@@ -354,8 +354,8 @@ class RenderWindow:
             print("Verhindern, dass das Objekt gespiegelt und wieder größer wird")
 
     # für Touchpad-User ": #" wegnehmen
-    def on_mouse_scroll(self, yOffset, scrollPos, scrollNeg):
-        if yOffset == 0.0: # or scrollNeg == -0.1: # für mac-user
+    def on_mouse_scroll(self, win, scrollPos, scrollNeg):
+        if win == 0.0: # or scrollNeg == -0.1: # für mac-user
             self.enlarge_field_of_vision(1)
         else:
             self.reduce_field_of_vision(1)
@@ -368,11 +368,34 @@ class RenderWindow:
             if action == glfw.PRESS:
                 self.scene.prev_mouse_pos = x  # Setzen der x-maus koordinate
 
-            # if button == glfw.MOUSE_BUTTON_MIDDLE and action == glfw.PRESS:
-            #     x, y = glfw.get_cursor_pos(win)
-            #     self.scene.prev_mouse_pos = (x, y)
-            # elif button == glfw.MOUSE_BUTTON_MIDDLE and action == glfw.RELEASE:
-            #     self.scene.prev_mouse_pos = None
+            if button == glfw.MOUSE_BUTTON_LEFT:
+                if action == glfw.PRESS:
+                    x, y = glfw.get_cursor_pos(win)
+                    px, py, pz = scene.projectOnSphere(x, y, 1000)
+                    scene.p1 = np.array([px, py, pz])
+                    scene.p1 /= np.linalg.norm(scene.p1)
+                    scene.first_click_done = True
+
+                    if action == glfw.RELEASE:
+                        scene.first_click_done = False
+
+    def mouse_move_event(self, win, x, y):
+        if scene.first_click_done:
+            px, py, pz = scene.projectOnSphere(x, y, 1000)
+            scene.p2 = np.array([px, py, pz])
+            scene.p2 /= np.linalg.norm(scene.p2)
+
+            p1_cross_p2 = np.cross(scene.p1, scene.p2)
+
+            if not np.allclose(p1_cross_p2, [0, 0, 0]):
+                scene.rotation_v = p1_cross_p2
+                dot_product = np.dot(scene.p1, scene.p2)
+
+                alpha = np.arccos(dot_product)
+                scene.rotation_alpha = alpha * 10
+                scene.p2 = np.array([px, py, pz])
+
+                scene.rotation_model = rotate(scene.rotation_alpha, scene.rotation_v) @ scene.rotation_model
 
     def on_keyboard(self, win, key, scancode, action, mods):
         print("keyboard: ", win, key, scancode, action, mods)
