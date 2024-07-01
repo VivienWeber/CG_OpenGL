@@ -1,127 +1,98 @@
+import numpy
 import numpy as np
 
 
-def load_obj(self, file_path):
-    """
-    Simple function to load an OBJ file and preprocess its vertices,
-    returning vertices, faces, and vertex normals.
-    """
-    vertices = []                           # Liste der Vertices
-    normals = []                            # Liste der Normalen
-    faces = []                              # Liste der Dreiecke
+def read_obj(self, file):
+    vertices = []
+    faces = []
+    normals = []
 
-    with open(file_path, 'r') as file:      # Datei im Lesemodus öffnen
-        colors = []
-
-        for line in file:
+    with open(file, 'r') as f:
+        for line in f:
             if line.startswith('#') or line in ['\n', '\r\n']:
                 continue
             stripped_line = line.strip()
-            if stripped_line.startswith('v '):
+            if stripped_line.startswith('v '):  # Vertices
                 vertex = list(map(float, stripped_line[2:].split()))
-                colors.append([0.0, 1.0, 1.0,
-                               0.0, 1.0, 1.0,
-                               0.0, 1.0, 1.0])
                 vertices.append(vertex)
-            elif stripped_line.startswith('f '):
+            elif stripped_line.startswith('f '):  # Faces
                 face = stripped_line[2:].split()
                 face_indices = [int(index.split('/')[0]) - 1 for index in face]
                 faces.append(face_indices)
-            elif stripped_line.startswith('vn '):
+            elif stripped_line.startswith('vn '):  # Normals
                 normal = list(map(float, stripped_line[3:].split()))
                 normals.append(normal)
 
-    # Liste der Vertices in Numpy Array konvertieren
-    vertices = np.array(vertices, dtype=np.float32) # Standardtyp für Indizes in OpenGL
-
-    # Mittelpunkt der Vertices berechnen und skalieren
     center = calculate_center(vertices)
 
-    # Vertices zum Mittelpunkt verschieben
     vertices = translate_to_center(vertices, center)
-
-    # Vertices
+    
     vertices = scale(vertices)
 
-    # Vertex-Normalen berechnen
-    # normals = calculate_vertex_normals(vertices, faces)
+    return vertices, faces, normals
 
-    # Faces als Array
-    faces = np.array(faces, dtype=np.int32)
+def scale(vertices):
+    x_max = max(vertice[0] for vertice in vertices)
+    y_max = max(vertice[1] for vertice in vertices)
+    z_max = max(vertice[2] for vertice in vertices)
 
-    return vertices, faces, normals, colors
+    global_max = max(x_max, y_max, z_max)
+
+    scaling_factor = global_max * 1.5
+
+    for vertice in vertices:
+        vertice[0] /= scaling_factor
+        vertice[1] /= scaling_factor
+        vertice[2] /= scaling_factor
+
+    return vertices
 
 
-def calculate_vertex_normals(vertices, faces):
-    """ calculate the normals of the vertices """
-    # np.zeros erstellt neues Array und initialisiert alle seine Elemente auf 0
-    normals = np.zeros((len(vertices), 3), dtype=np.float32)
+def calculate_normals(vertices, faces):
+    normals = []
 
     for face in faces:
-        # Indizes der drei Eckpunkte der Fläche
-        a_index, b_index, c_index = face
+        a_idx, b_idx, c_idx = face
+        a = numpy.array(vertices[a_idx])
+        b = numpy.array(vertices[b_idx])
+        c = numpy.array(vertices[c_idx])
 
-        # Koordinaten der drei Eckpunkte holen
-        a = np.array(vertices[a_index])
-        b = np.array(vertices[b_index])
-        c = np.array(vertices[c_index])
+        v1 = b - a
+        v2 = c - a
 
-        # zwei Vektoren entlang der Kanten der Fläche berechnen
-        vec1 = b - a
-        vec2 = c - a
-
-        # Kreuzprodukt der beiden Vektoren, um Flächennormale zu erhalten
-        normal = np.cross(vec1, vec2)
-        # Normale normalisieren (Einheitsvektor)
+        normal = np.cross(v1, v2)
         normal /= np.linalg.norm(normal)
 
-        # berechnete Normale den Vertices hinzufügen
-        normals[a_index] += normal
-        normals[b_index] += normal
-        normals[c_index] += normal
-
-    # alle Vertex-Normalen normalisieren
-    normals = np.array([normal / np.linalg.norm(normal) for normal in normals])
-
+        normals.append(normal)
     return normals
 
 
 def calculate_center(vertices):
-    """ calculate the center of the vertices """
-    if len(vertices) == 0:
+    num_vertices = len(vertices)
+    if num_vertices == 0:
         return [0.0, 0.0, 0.0]
 
-    vertices = np.array(vertices)
+    sum_x, sum_y, sum_z = 0.0, 0.0, 0.0
+    for vertex in vertices:
+        sum_x += vertex[0]
+        sum_y += vertex[1]
+        sum_z += vertex[2]
 
-    # Mittelwert jeder Spalte (x, y, z) berechnen mit np.mean()
-    center = np.mean(vertices, axis=0)
+    center_x = sum_x / num_vertices
+    center_y = sum_y / num_vertices
+    center_z = sum_z / num_vertices
 
-    return center.tolist()
+    return [center_x, center_y, center_z]
 
 
 def translate_to_center(vertices, center):
-    """ is used to translate a 3D object so that it is located at the origin of the coordinate system (0, 0, 0) """
-    vertices = np.array(vertices)
-    center = np.array(center)
+    translated_vertices = []
+    for vertex in vertices:
+        translated_vertex = [
+            vertex[0] - center[0],
+            vertex[1] - center[1],
+            vertex[2] - center[2]
+        ]
+        translated_vertices.append(translated_vertex)
 
-    # Vertices zum Mittelpunkt verschieben
-    translated_vertices = vertices - center
-
-    return translated_vertices.tolist()
-
-
-def scale(vertices):
-    """ Scale the vertices so that they are close to 1.0 """
-    vertices = np.array(vertices)
-
-    # maximalen absoluten Koordinatenwert zur Skalierung finden mit np.abs()
-    # -> berechnet absoluten Wert eines Arrays, unabhängig vom Vorzeichen
-    global_max = np.max(np.abs(vertices))
-
-    # Skalierungsfaktor berechnen
-    scaling_factor = global_max * 1.5
-
-    # Vertices skalieren
-    scaled_vertices = vertices / scaling_factor
-
-    return scaled_vertices.tolist()
+    return translated_vertices
