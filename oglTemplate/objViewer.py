@@ -71,12 +71,16 @@ class Scene:
         self.rotation_v = np.array([1, 1, 1])   # Rotationsachse für Mausrotation
         self.rotation_alpha = 0.0               # Rotationswinkel für Mausrotation
         self.first_click_done = False           # Flag, ob erster Klick erfolgt ist
-        self.rotation_model = rotate(0, np.array([1, 1, 1]))
+        self.rotation_model = rotate(0, np.array([1, 1, 1]))    # initialisiert Rotation-Model
 
         # Projektionstyp (perspektivisch oder orthographisch)
         self.projection_type = 'perspective'    # Aktueller Projektionstyp
 
     def init_GL(self):
+        """
+            Initialisiert OpenGL, erstellt Shader und bindet den Vertex-Array-Objekt
+        """
+
         # setup buffer (vertices, colors, normals, ...)
         self.gen_buffers()  # erzeugt und initialisiert die Pufferobjekte
         # setup shader
@@ -92,6 +96,10 @@ class Scene:
         glBindVertexArray(0)
 
     def gen_buffers(self):
+        """
+            Generiert und initialisiert die Puffer für die Vertex-Positionen, -Normalen und -Indizes
+        """
+
         vertices, faces, normals, colors = load_obj(self, self.objectPath)
         if len(normals) == 0:
             normals = calculate_vertex_normals(vertices, faces)
@@ -116,19 +124,12 @@ class Scene:
         glEnableVertexAttribArray(0)
 
         # Vertex normals
-        farben = np.array(colors, dtype=np.float32).flatten()  # nicht Listen in Listen sondern nur eine Liste insg.
+        farben = np.array(colors, dtype=np.float32).flatten()  # nicht Listen in Listen, sondern nur eine Liste insg.
         norm_buffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, norm_buffer)
         glBufferData(GL_ARRAY_BUFFER, farben.nbytes, farben, GL_STATIC_DRAW)
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
         glEnableVertexAttribArray(1)
-
-        # Index buffer
-        # self.indices = np.array([0, 1, 2, 3, 0, 1], dtype=np.int32)
-        # self.indices = np.array(faces, dtype=np.int32)
-        # ind_buffer = glGenBuffers(1)
-        # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buffer)
-        # glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
 
         # Index buffer
         self.indices = np.array(indices, dtype=np.int32)
@@ -141,10 +142,18 @@ class Scene:
         glBindVertexArray(0)
 
     def set_size(self, width, height):
+        """
+            Setzt die Größe der Szene
+        """
+
         self.width = width
         self.height = height
 
     def change_projection(self):
+        """
+            Wechselt den Projektionstyp zwischen perspektivisch und orthographisch
+        """
+
         if self.projection_type == 'perspective':
             self.projection_type = 'orthographic'
         else:
@@ -152,7 +161,7 @@ class Scene:
 
     def projectOnSphere(self, x, y, r):
         """
-            Arcball-Metapher
+            Projektion auf eine Kugel (Arcball-Metapher)
         """
 
         x, y = x - width / 2.0, height / 2.0 - y
@@ -166,6 +175,10 @@ class Scene:
             return x / l, y / l, z / l
 
     def update_scene(self, win):
+        """
+            Aktualisiert die Szene basierend auf der Mausbewegung
+        """
+
         x, y = glfw.get_cursor_pos(win)
         if glfw.get_mouse_button(win, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS:
             dx = x - self.prev_mouse_pos
@@ -209,6 +222,10 @@ class Scene:
             self.first_click_done = False
 
     def draw(self):
+        """
+            Zeichnet die Szene basierend auf der aktuellen Ansicht und dem Modellstatus
+        """
+
         # Buffer löschen (da werden die Informationen reingeladen)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -253,7 +270,6 @@ class Scene:
         glUseProgram(0)
         glBindVertexArray(0)
 
-
 def switch_projection_type():
     """
         Switches the projection type between perspective and orthographic.
@@ -265,15 +281,6 @@ def switch_projection_type():
     else:
         scene.projection_type = 'perspective'
         print("Wechsel zu Zentral-Projektion")
-
-
-#def rotation_matrix(self, axis, theta):
-#    axis = axis / np.sqrt(np.dot(axis, axis))
-#    a = np.cos(theta / 2.0)
-#    b, c, d = -axis * np.sin(theta / 2.0)
-#    return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c + a * d), 2 * (b * d - a * c)],
-#                     [2 * (b * c - a * d), a * a + c * c - b * b - d * d, 2 * (c * d + a * b)],
-#                     [2 * (b * d + a * c), 2 * (c * d - a * b), a * a + d * d - b * b - c * c]])
 
 
 class RenderWindow:
@@ -355,7 +362,7 @@ class RenderWindow:
 
     # für Touchpad-User ": #" wegnehmen
     def on_mouse_scroll(self, win, scrollPos, scrollNeg):
-        if win == 0.0: # or scrollNeg == -0.1: # für mac-user
+        if win == 0.0 or scrollNeg == -0.1: # für mac-user
             self.enlarge_field_of_vision(1)
         else:
             self.reduce_field_of_vision(1)
@@ -381,15 +388,15 @@ class RenderWindow:
 
     def mouse_move_event(self, win, x, y):
         if scene.first_click_done:
-            px, py, pz = scene.projectOnSphere(x, y, 1000)
-            scene.p2 = np.array([px, py, pz])
+            px, py, pz = scene.projectOnSphere(x, y, 1000)      # Radius des Arcballs = 1000
+            scene.p2 = np.array([px, py, pz])                      # p2 = jede einzelne Bewegung
             scene.p2 /= np.linalg.norm(scene.p2)
 
             p1_cross_p2 = np.cross(scene.p1, scene.p2)
 
-            if not np.allclose(p1_cross_p2, [0, 0, 0]):
+            if not np.allclose(p1_cross_p2, [0, 0, 0]):         #
                 scene.rotation_v = p1_cross_p2
-                dot_product = np.dot(scene.p1, scene.p2)
+                dot_product = np.dot(scene.p1, scene.p2)           # Skalarprodukt
 
                 alpha = np.arccos(dot_product)
                 scene.rotation_alpha = alpha * 10
